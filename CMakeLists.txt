@@ -1,0 +1,12 @@
+cmake_minimum_required(VERSION 3.14)
+project(mrdc2020)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -pedantic")
+
+add_subdirectory(ball/control-node)
+add_subdirectory(ball/image-classification)
+add_subdirectory(drivetrain/control-node)
+add_subdirectory(drivetrain/laptop)
+add_subdirectory(gyroscope/control-node)
+add_subdirectory(serial-interface/arduino-code)
+add_subdirectory(serial-interface/rpi-node)
