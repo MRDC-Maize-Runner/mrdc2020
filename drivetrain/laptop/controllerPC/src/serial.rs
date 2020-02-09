@@ -30,10 +30,10 @@ pub fn port_setup(
 
 pub fn serial_send_data(
     mut port: Box<dyn serialport::SerialPort>,
-    rx: Receiver<(f32, f32, Vec<bool>)>,
+    rx: Receiver<(f32, f32)>,
 ) {
     loop {
-        let message: (f32, f32, Vec<bool>) = rx.recv().unwrap();
+        let message: (f32, f32) = rx.recv().unwrap();
         let bytes: Vec<u8> = construct_message(message);
         port.write(&bytes).expect("Cant write");
     }
@@ -45,14 +45,14 @@ fn bool_to_u8(b: bool) -> u8 {
     }
 }
 
-pub fn construct_message(message: (f32, f32, Vec<bool>)) -> Vec<u8> {
+pub fn construct_message(message: (f32, f32)) -> Vec<u8> {
     let mut bytes: Vec<u8> = Vec::new();
     let mut bytes_from_float: [u8; 4] = unsafe { transmute(message.0.to_bits().to_be()) };
     bytes.extend(bytes_from_float.iter().cloned());
     bytes_from_float = unsafe { transmute(message.1.to_bits().to_be()) };
     bytes.extend(bytes_from_float.iter().cloned());
 
-    let mut bit_num = 8;
+    /*let mut bit_num = 8;
     let mut byte: u8 = 0;
     for x in message.2 {
         println!("{}, {:b}", x, byte);
@@ -65,14 +65,15 @@ pub fn construct_message(message: (f32, f32, Vec<bool>)) -> Vec<u8> {
         } else {
             byte = byte << 1;
         }
-	}
-	bytes.push(byte);
+	}wr
+	bytes.push(byte);*/
     return bytes;
 }
 
 pub fn serial_get_data(mut port: Box<dyn serialport::SerialPort>, tx: Sender<Vec<u8>>) {
-    let mut serial_buf = Vec::new();
     loop {
-        port.read(serial_buf.as_mut_slice()).expect("boom");
+        //let mut serial_buf = Vec::new();
+
+        //port.read(serial_buf.as_mut_slice()).expect("Cant read serial data");
     }
 }

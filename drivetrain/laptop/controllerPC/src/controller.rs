@@ -2,7 +2,7 @@ use gilrs::{Axis, Event, Gilrs};
 use std::sync::mpsc::SyncSender;
 
 //Function to run a game controller
-pub fn controller_loop(foward: Axis, turn: Axis, tx: SyncSender<(f32, f32, u64)>) {
+pub fn controller_loop(foward: Axis, turn: Axis, tx: SyncSender<(f32, f32)>) {
     //initialize the library
     let mut gilrs = Gilrs::new().unwrap();
     // Iterate over all connected gamepads and print out stuff about them
@@ -30,7 +30,7 @@ pub fn controller_loop(foward: Axis, turn: Axis, tx: SyncSender<(f32, f32, u64)>
 
         //Send the current state of the gamepad over the channel.
         if let Some(gamepad) = active_gamepad.map(|id| gilrs.gamepad(id)) {
-            let analog = (gamepad.value(foward), gamepad.value(turn), gilrs.counter());
+            let analog = (gamepad.value(foward), gamepad.value(turn));
             tx.send(analog).unwrap();
         }
         gilrs.inc();
