@@ -3,6 +3,7 @@ use gilrs::{Axis, Event, Gilrs};
 
 use std::sync::mpsc::{Sender, SyncSender};
 
+//declare the ros object for a controller state
 pub mod state {
     include!(concat!(env!("OUT_DIR"), "/state.rs"));
 }
@@ -10,7 +11,7 @@ pub mod state {
 //Function to run a game controller
 pub fn controller_loop(
     tui_log_tx: Sender<String>,
-    foward: Axis,
+    forward: Axis,
     turn: Axis,
     tx: SyncSender<state::State>,
 ) {
@@ -62,7 +63,7 @@ pub fn controller_loop(
 
             //gamepad found, set up axis
             let gamepad = gilrs.gamepad(active_gamepad.unwrap());
-            fwdaxis = gamepad.axis_code(foward);
+            fwdaxis = gamepad.axis_code(forward);
             trnaxis = gamepad.axis_code(turn);
 
             //set up buttons
@@ -86,6 +87,7 @@ pub fn controller_loop(
         if let Some(gamepad) = active_gamepad.map(|id| gilrs.gamepad(id)) {
             let state: &GamepadState = gamepad.state();
 
+            //make a state of the controller
             let mut current_state = state::State::default();
 
             current_state.forward = state.axis_data(fwdaxis.unwrap()).unwrap().value();

@@ -38,10 +38,16 @@ pub fn serial_send_data(
     rx: Receiver<state::State>,
 ) {
     loop {
+        //receive a controller state, encode it, add a header and send it over serial
         let message: state::State = rx.recv().unwrap();
         let mut buf = Vec::new();
         message.encode(&mut buf);
-        port.write(&mut buf).unwrap();
+
+        //ASCII "Transmission" and the length. This makes the header 13 bytes
+        let mut transmission: Vec<u8> = vec![84,114,97,110,115,109,105,115,115,105,111,110, message.encoded_len() as u8];
+        transmission.extend(buf);
+
+        port.write(&transmission).unwrap();
     }
 }
 
