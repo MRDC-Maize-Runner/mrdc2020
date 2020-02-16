@@ -3,12 +3,16 @@ use gilrs::{Axis, Event, Gilrs};
 
 use std::sync::mpsc::{Sender, SyncSender};
 
+pub mod state {
+    include!(concat!(env!("OUT_DIR"), "/state.rs"));
+}
+
 //Function to run a game controller
 pub fn controller_loop(
     tui_log_tx: Sender<String>,
     foward: Axis,
     turn: Axis,
-    tx: SyncSender<(f32, f32, Vec<(&str, bool)>)>,
+    tx: SyncSender<state::State>,
 ) {
     //initialize the library
     let mut gilrs = Gilrs::new().unwrap();
@@ -25,29 +29,29 @@ pub fn controller_loop(
     let mut trnaxis = None;
 
     //set up button bindings
-    let generic_buttons: [(&str, Button); 20] = [
-        ("South", Button::South),
-        ("East", Button::East),
-        ("North", Button::North),
-        ("West", Button::West),
-        ("C", Button::C),
-        ("Z", Button::Z),
-        ("SLeftTrigger", Button::LeftTrigger),
-        ("LeftTrigger2", Button::LeftTrigger2),
-        ("RightTrigger", Button::RightTrigger),
-        ("RightTrigger2", Button::RightTrigger2),
-        ("Select", Button::Select),
-        ("Start", Button::Start),
-        ("Mode", Button::Mode),
-        ("LeftThumb", Button::LeftThumb),
-        ("RightThumb", Button::RightThumb),
-        ("DPadUp", Button::DPadUp),
-        ("DPadDown", Button::DPadDown),
-        ("DPadLeft", Button::DPadLeft),
-        ("DPadRight", Button::DPadRight),
-        ("Unknown", Button::Unknown),
+    let generic_buttons: [(u32, Button); 20] = [
+        (0, Button::South),
+        (1, Button::East),
+        (2, Button::North),
+        (3, Button::West),
+        (4, Button::C),
+        (5, Button::Z),
+        (6, Button::LeftTrigger),
+        (7, Button::LeftTrigger2),
+        (8, Button::RightTrigger),
+        (9, Button::RightTrigger2),
+        (10, Button::Select),
+        (11, Button::Start),
+        (12, Button::Mode),
+        (13, Button::LeftThumb),
+        (14, Button::RightThumb),
+        (15, Button::DPadUp),
+        (16, Button::DPadDown),
+        (17, Button::DPadLeft),
+        (18, Button::DPadRight),
+        (19, Button::Unknown),
     ];
-    let mut buttons: Vec<(&str, Code)> = Vec::with_capacity(25);
+    let mut buttons: Vec<(&u32, Code)> = Vec::with_capacity(25);
 
     //find the active gamepad by looking for an event and setup the axis and buttons
     while active_gamepad.is_none() || fwdaxis.is_none() || trnaxis.is_none() {
@@ -63,10 +67,10 @@ pub fn controller_loop(
 
             //set up buttons
             buttons.drain(0..buttons.len());
-            for (s, b) in &generic_buttons {
+            for (n, b) in &generic_buttons {
                 let code = gamepad.button_code(b.clone());
                 if code.is_some() {
-                    buttons.push((s, code.unwrap()));
+                    buttons.push((n, code.unwrap()));
                 }
             }
         }
@@ -82,25 +86,21 @@ pub fn controller_loop(
         if let Some(gamepad) = active_gamepad.map(|id| gilrs.gamepad(id)) {
             let state: &GamepadState = gamepad.state();
 
-            //get axis data
-            let analog = (
-                state.axis_data(fwdaxis.unwrap()),
-                state.axis_data(trnaxis.unwrap()),
-            );
+            let mut current_state = state::State::default();
+
+            current_state.forward = state.axis_data(fwdaxis.unwrap()).unwrap().value();
+            current_state.turn = state.axis_data(trnaxis.unwrap()).unwrap().value();
+
             //get buttons data
-            let mut buttons_state: Vec<(&str, bool)> = Vec::with_capacity(buttons.len());
-            for (s, b) in buttons.clone() {
-                buttons_state.push((s.clone(), state.is_pressed(b)));
+            let mut buttons_pressed: Vec<u32> = Vec::with_capacity(buttons.len());
+            for (n, b) in buttons.clone() {
+                if state.is_pressed(b) {
+                    buttons_pressed.push(n+0);
+                }
             }
+            current_state.buttons = buttons_pressed;
             //send it, this will hang until there is space open in the channel
-            if analog.0.is_some() && analog.1.is_some() {
-                tx.send((
-                    analog.0.unwrap().value(),
-                    analog.1.unwrap().value(),
-                    buttons_state,
-                ))
-                .unwrap();
-            }
+            tx.send(current_state);
         }
 
         gilrs.inc();

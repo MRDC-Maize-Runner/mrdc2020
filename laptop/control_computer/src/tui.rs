@@ -6,12 +6,14 @@ use crossterm::terminal::enable_raw_mode;
 use tui::layout::{Constraint, Direction, Layout};
 use tui::style::{Color, Style};
 use tui::widgets::{
-    Axis, Block, Borders, Chart, Dataset, Marker, Paragraph, Row, Table, Text, Widget,
+    Axis, Block, Borders, Chart, Dataset, Marker, Paragraph, Text, Widget,
 };
 use tui::{backend::CrosstermBackend, Terminal};
 
+use crate::controller::state;
+
 //setup tui and run thread
-pub fn tui_setup(rx_controller: Receiver<(f32, f32, Vec<(&str, bool)>)>, rx_log: Receiver<String>) {
+pub fn tui_setup(rx_controller: Receiver<state::State>, rx_log: Receiver<String>) {
     //set tui loop update delay
     let loop_delay = Duration::from_millis(100);
 
@@ -31,28 +33,22 @@ pub fn tui_setup(rx_controller: Receiver<(f32, f32, Vec<(&str, bool)>)>, rx_log:
     //stuff to help in main loop
     let mut log: Vec<String> = Vec::new();
     let log_block = Block::default().title("Log").borders(Borders::ALL);
-
+    
     loop {
+        let mut controller_received: state::State = state::State::default();
         //make a place to store controller received stuff
-        let mut controller_received: (f32, f32, Vec<(&str, bool)>) =
-            (0.0, 0.0, vec![("debug", true)]);
         let controller_received_raw = rx_controller.try_iter();
         //get controller state
         for msg in controller_received_raw {
-            controller_received = msg;
+            controller_received = msg.clone();
         }
         //formate that data for display (graph, table)
-        data = [(controller_received.0 as f64, controller_received.1 as f64)];
-        let mut rows: Vec<(String, String)> = Vec::with_capacity(controller_received.2.len());
-        let mut row: Vec<[String; 2]> = Vec::new();
-        for r in controller_received.2 {
-            rows.push((String::from(r.0), format!("{}", r.1)));
-        }
-        for (s, v) in rows {
-            row.push([s, v]);
-        }
-        let rows_premade = row.iter().map(|r| Row::Data(r.into_iter()));
+        data = [(controller_received.forward as f64, controller_received.turn as f64)];
 
+        let mut buttons_str = String::from("Buttons: \n");
+        for btn in controller_received.buttons{
+            buttons_str.push_str(format!("{} \n", button_name(btn)).as_str());
+        }
         //get log and add it to the log
         let log_msgs = rx_log.try_iter();
         for l in log_msgs {
@@ -114,12 +110,10 @@ pub fn tui_setup(rx_controller: Receiver<(f32, f32, Vec<(&str, bool)>)>, rx_log:
                             .style(Style::default().fg(Color::Cyan))
                             .data(&data)])
                         .render(&mut f, chunks[0]);
-                    Table::new(["Button", "Pressed"].iter(), rows_premade.map(|r| r))
-                        .block(Block::default().title("Table"))
-                        .header_style(Style::default().fg(Color::Yellow))
-                        .widths(&[Constraint::Length(15), Constraint::Length(15)])
-                        .style(Style::default().fg(Color::White))
-                        .column_spacing(1)
+                    Paragraph::new([Text::raw(buttons_str)].iter())
+                        .block(log_block)
+                        .style(Style::default())
+                        .wrap(true)
                         .render(&mut f, chunks[1]);
                     Paragraph::new([Text::raw(log.join("\n"))].iter())
                         .block(log_block)
@@ -134,6 +128,32 @@ pub fn tui_setup(rx_controller: Receiver<(f32, f32, Vec<(&str, bool)>)>, rx_log:
             })
             .expect("terminal fail");
         //wait for loop delay
-        thread::sleep(loop_delay)
+        thread::sleep(loop_delay);
     }
+}
+
+fn button_name(num: u32) -> Box<String>{
+    let generic_buttons= [
+        "South",
+        "East",
+        "North",
+        "West",
+        "C",
+        "Z",
+        "LeftTrigger",
+        "LeftTrigger2",
+        "RightTrigger",
+        "RightTrigger2",
+        "Select",
+        "Start",
+        "Mode",
+        "LeftThumb",
+        "RightThumb",
+        "DPadUp",
+        "DPadDown",
+        "DPadLeft",
+        "DPadRight",
+        "Unknown",
+    ];
+    return Box::new(String::from(generic_buttons[num as usize]));
 }

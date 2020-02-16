@@ -3,9 +3,12 @@ use std::sync::mpsc::{channel, sync_channel};
 use std::sync::mpsc::{Receiver, Sender, SyncSender};
 use std::{thread, time};
 
+use crate::controller::state;
+
 mod controller;
 mod serial;
 mod tui;
+
 
 fn main() {
     //set loop timing for the main thread
@@ -13,17 +16,17 @@ fn main() {
 
     //set up tui
     let (tui_controller_tx, tui_controller_rx): (
-        SyncSender<(f32, f32, Vec<(&str, bool)>)>,
-        Receiver<(f32, f32, Vec<(&str, bool)>)>,
-    ) = sync_channel(0);
+        Sender<controller::state::State>,
+        Receiver<controller::state::State>,
+    ) = channel();
     let (tui_log_tx, tui_log_rx): (Sender<String>, Receiver<String>) = channel();
     let _tui_receive_thread = thread::spawn(move || tui::tui_setup(tui_controller_rx, tui_log_rx));
     let _ = tui_log_tx.send(String::from("Log Starting"));
 
     //set up controller
     let (controller_tx, controller_rx): (
-        SyncSender<(f32, f32, Vec<(&str, bool)>)>,
-        Receiver<(f32, f32, Vec<(&str, bool)>)>,
+        SyncSender<controller::state::State>,
+        Receiver<controller::state::State>,
     ) = sync_channel(0);
     let controller_thread_logger = tui_log_tx.clone();
     let _controller_thread = thread::spawn(move || {
@@ -38,8 +41,8 @@ fn main() {
     //set up serial port
     let (serial_transmit_port, serial_receive_port) = serial::port_setup("/dev/ttyS10", 115200, 10);
     let (serial_transmit_tx, serial_transmit_rx): (
-        SyncSender<(f32, f32, Vec<(&str, bool)>)>,
-        Receiver<(f32, f32, Vec<(&str, bool)>)>,
+        SyncSender<state::State>,
+        Receiver<state::State>,
     ) = sync_channel(0);
     let (serial_receive_tx, _serial_receive_rx): (Sender<Vec<u8>>, Receiver<Vec<u8>>) = channel();
     let serial_transmit_thread_logger = tui_log_tx.clone();

@@ -1,10 +1,13 @@
 use std::io::Write;
-use std::mem::transmute;
 use std::sync::mpsc::{Receiver, Sender};
 use std::time::Duration;
 
 use serialport::prelude::*;
 extern crate serialport;
+
+use prost::Message;
+
+use crate::controller::state;
 
 //set up the serial port
 pub fn port_setup(
@@ -32,45 +35,14 @@ pub fn port_setup(
 pub fn serial_send_data(
     _tui_log_tx: Sender<String>,
     mut port: Box<dyn serialport::SerialPort>,
-    rx: Receiver<(f32, f32, Vec<(&str, bool)>)>,
+    rx: Receiver<state::State>,
 ) {
     loop {
-        let message: (f32, f32, Vec<(&str, bool)>) = rx.recv().unwrap();
-        let bytes: Vec<u8> = construct_message(message);
-        port.write(&bytes).expect("Cant write");
+        let message: state::State = rx.recv().unwrap();
+        let mut buf = Vec::new();
+        message.encode(&mut buf);
+        port.write(&mut buf).unwrap();
     }
-}
-//self explanitory
-fn bool_to_u8(b: bool) -> u8 {
-    match b {
-        true => 1,
-        false => 0,
-    }
-}
-
-//implements our protocol to make a serial transmission
-pub fn construct_message(message: (f32, f32, Vec<(&str, bool)>)) -> Vec<u8> {
-    let mut bytes: Vec<u8> = Vec::new();
-    let mut bytes_from_float: [u8; 4] = unsafe { transmute(message.0.to_bits().to_be()) };
-    bytes.extend(bytes_from_float.iter().cloned());
-    bytes_from_float = unsafe { transmute(message.1.to_bits().to_be()) };
-    bytes.extend(bytes_from_float.iter().cloned());
-    let mut bit_num = 8;
-    let mut byte: u8 = 0;
-    for x in message.2 {
-        //println!("{}, {:b}", x, byte);
-        byte += bool_to_u8(x.1);
-        bit_num += -1;
-        if bit_num == 0 {
-            bytes.push(byte);
-            byte = 0;
-            bit_num = 7;
-        } else {
-            byte = byte << 1;
-        }
-    }
-    bytes.push(byte);
-    return bytes;
 }
 
 //get data from the serial port
