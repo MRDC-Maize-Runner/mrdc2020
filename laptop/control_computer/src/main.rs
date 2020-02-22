@@ -1,7 +1,7 @@
 use gilrs::Axis;
 use std::sync::mpsc::{channel, sync_channel};
 use std::sync::mpsc::{Receiver, Sender, SyncSender};
-use std::{thread, time};
+use std::{env, thread, time};
 
 use crate::controller::state;
 
@@ -10,6 +10,7 @@ mod serial;
 mod tui;
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
     //set loop timing for the main thread
     let loop_delay = time::Duration::from_millis(10);
 
@@ -38,7 +39,7 @@ fn main() {
     });
 
     //set up serial port
-    let (serial_transmit_port, serial_receive_port) = serial::port_setup("/dev/ttyS10", 115200, 10);
+    let (serial_transmit_port, serial_receive_port) = serial::port_setup(&args[1], 115200, 10);
     let (serial_transmit_tx, serial_transmit_rx): (
         SyncSender<state::State>,
         Receiver<state::State>,

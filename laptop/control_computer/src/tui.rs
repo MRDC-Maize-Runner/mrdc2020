@@ -115,8 +115,7 @@ pub fn tui_setup(rx_controller: Receiver<state::State>, rx_log: Receiver<String>
                     .style(Style::default())
                     .wrap(true)
                     .render(&mut f, chunks[2]);
-            }
-            )
+            })
             .expect("terminal fail");
         //wait for loop delay
         thread::sleep(loop_delay);
