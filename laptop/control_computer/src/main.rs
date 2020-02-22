@@ -9,7 +9,6 @@ mod controller;
 mod serial;
 mod tui;
 
-
 fn main() {
     //set loop timing for the main thread
     let loop_delay = time::Duration::from_millis(10);

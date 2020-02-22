@@ -5,9 +5,7 @@ use crossterm::terminal::enable_raw_mode;
 
 use tui::layout::{Constraint, Direction, Layout};
 use tui::style::{Color, Style};
-use tui::widgets::{
-    Axis, Block, Borders, Chart, Dataset, Marker, Paragraph, Text, Widget,
-};
+use tui::widgets::{Axis, Block, Borders, Chart, Dataset, Marker, Paragraph, Text, Widget};
 use tui::{backend::CrosstermBackend, Terminal};
 
 use crate::controller::state;
@@ -32,8 +30,7 @@ pub fn tui_setup(rx_controller: Receiver<state::State>, rx_log: Receiver<String>
 
     //stuff to help in main loop
     let mut log: Vec<String> = Vec::new();
-    let log_block = Block::default().title("Log").borders(Borders::ALL);
-    
+
     loop {
         let mut controller_received: state::State = state::State::default();
         //make a place to store controller received stuff
@@ -43,10 +40,13 @@ pub fn tui_setup(rx_controller: Receiver<state::State>, rx_log: Receiver<String>
             controller_received = msg.clone();
         }
         //formate that data for display (graph, table)
-        data = [(controller_received.forward as f64, controller_received.turn as f64)];
+        data = [(
+            controller_received.forward as f64,
+            controller_received.turn as f64,
+        )];
 
         let mut buttons_str = String::from("Buttons: \n");
-        for btn in controller_received.buttons{
+        for btn in controller_received.buttons {
             buttons_str.push_str(format!("{} \n", button_name(btn)).as_str());
         }
         //get log and add it to the log
@@ -56,7 +56,8 @@ pub fn tui_setup(rx_controller: Receiver<state::State>, rx_log: Receiver<String>
         }
 
         //actually make the tui. I recommend minimizing this code block because it is long
-        terminal.draw(|mut f| {
+        terminal
+            .draw(|mut f| {
                 //get size and drain log to fit
                 let size = f.size();
                 let height: u16 = (size.bottom() - size.top() - 4) / 2;
@@ -65,75 +66,65 @@ pub fn tui_setup(rx_controller: Receiver<state::State>, rx_log: Receiver<String>
                 }
                 //make the tui
                 let chunks = Layout::default()
-                    .direction(Direction::Vertical)
-                    .margin(1)
-                    .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+                    .direction(Direction::Horizontal)
+                    .constraints(
+                        [
+                            Constraint::Percentage(30),
+                            Constraint::Percentage(20),
+                            Constraint::Percentage(50),
+                        ]
+                        .as_ref(),
+                    )
                     .split(f.size());
-                {
-                    let chunks = Layout::default()
-                        .direction(Direction::Horizontal)
-                        .constraints(
-                            [
-                                Constraint::Percentage(30),
-                                Constraint::Percentage(20),
-                                Constraint::Percentage(50),
-                            ]
-                            .as_ref(),
-                        )
-                        .split(chunks[0]);
-                    Chart::default()
-                        .block(
-                            Block::default()
-                                .title("Controller Position")
-                                .title_style(Style::default())
-                                .borders(Borders::ALL),
-                        )
-                        .x_axis(
-                            Axis::default()
-                                .title("X Axis")
-                                .style(Style::default())
-                                .labels_style(Style::default())
-                                .bounds([-1.1, 1.1])
-                                .labels(&["-1", "0", "1"]),
-                        )
-                        .y_axis(
-                            Axis::default()
-                                .title("Y Axis")
-                                .style(Style::default())
-                                .labels_style(Style::default())
-                                .bounds([-1.1, 1.1])
-                                .labels(&["-1", "0", "1"]),
-                        )
-                        .datasets(&[Dataset::default()
-                            .name("Stick Position")
-                            .marker(Marker::Dot)
-                            .style(Style::default().fg(Color::Cyan))
-                            .data(&data)])
-                        .render(&mut f, chunks[0]);
-                    Paragraph::new([Text::raw(buttons_str)].iter())
-                        .block(log_block)
-                        .style(Style::default())
-                        .wrap(true)
-                        .render(&mut f, chunks[1]);
-                    Paragraph::new([Text::raw(log.join("\n"))].iter())
-                        .block(log_block)
-                        .style(Style::default())
-                        .wrap(true)
-                        .render(&mut f, chunks[2]);
-                }
-                Block::default()
-                    .title("main block")
-                    .borders(Borders::ALL)
+                Chart::default()
+                    .block(
+                        Block::default()
+                            .title("Controller Position")
+                            .title_style(Style::default())
+                            .borders(Borders::ALL),
+                    )
+                    .x_axis(
+                        Axis::default()
+                            .title("X Axis")
+                            .style(Style::default())
+                            .labels_style(Style::default())
+                            .bounds([-1.1, 1.1])
+                            .labels(&["-1", "0", "1"]),
+                    )
+                    .y_axis(
+                        Axis::default()
+                            .title("Y Axis")
+                            .style(Style::default())
+                            .labels_style(Style::default())
+                            .bounds([-1.1, 1.1])
+                            .labels(&["-1", "0", "1"]),
+                    )
+                    .datasets(&[Dataset::default()
+                        .name("Stick Position")
+                        .marker(Marker::Dot)
+                        .style(Style::default().fg(Color::Cyan))
+                        .data(&data)])
+                    .render(&mut f, chunks[0]);
+                Paragraph::new([Text::raw(buttons_str)].iter())
+                    .block(Block::default().title("Buttons").borders(Borders::ALL))
+                    .style(Style::default())
+                    .wrap(true)
                     .render(&mut f, chunks[1]);
-            })
+                Paragraph::new([Text::raw(log.join("\n"))].iter())
+                    .block(Block::default().title("Log").borders(Borders::ALL))
+                    .style(Style::default())
+                    .wrap(true)
+                    .render(&mut f, chunks[2]);
+            }
+            )
             .expect("terminal fail");
         //wait for loop delay
         thread::sleep(loop_delay);
     }
 }
 
-fn button_name(num: u32) -> Box<String>{
-    let generic_buttons= [
+fn button_name(num: u32) -> Box<String> {
+    let generic_buttons = [
         "South",
         "East",
         "North",

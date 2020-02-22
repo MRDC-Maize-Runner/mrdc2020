@@ -1,6 +1,9 @@
 use std::io::Write;
 use std::sync::mpsc::{Receiver, Sender};
 use std::time::Duration;
+use std::{thread, time};
+
+use bytes::Bytes;
 
 use serialport::prelude::*;
 extern crate serialport;
@@ -8,6 +11,10 @@ extern crate serialport;
 use prost::Message;
 
 use crate::controller::state;
+
+pub mod status {
+    include!(concat!(env!("OUT_DIR"), "/status.rs"));
+}
 
 //set up the serial port
 pub fn port_setup(
@@ -44,7 +51,21 @@ pub fn serial_send_data(
         message.encode(&mut buf);
 
         //ASCII "Transmission" and the length. This makes the header 13 bytes
-        let mut transmission: Vec<u8> = vec![84,114,97,110,115,109,105,115,115,105,111,110, message.encoded_len() as u8];
+        let mut transmission: Vec<u8> = vec![
+            84,
+            114,
+            97,
+            110,
+            115,
+            109,
+            105,
+            115,
+            115,
+            105,
+            111,
+            110,
+            message.encoded_len() as u8,
+        ];
         transmission.extend(buf);
 
         port.write(&transmission).unwrap();
@@ -53,13 +74,37 @@ pub fn serial_send_data(
 
 //get data from the serial port
 pub fn serial_get_data(
-    _tui_log_tx: Sender<String>,
-    _port: Box<dyn serialport::SerialPort>,
+    tui_log_tx: Sender<String>,
+    mut port: Box<dyn serialport::SerialPort>,
     _tx: Sender<Vec<u8>>,
 ) {
-    /*loop {
-        //let mut serial_buf = Vec::new();
+    let header: [u8; 12] = [84, 114, 97, 110, 115, 109, 105, 115, 115, 105, 111, 110];
+    let loop_delay = time::Duration::from_millis(10);
 
-        //port.read(serial_buf.as_mut_slice()).expect("Cant read serial data");
-    }*/
+    let mut buf: [u8; 12] = [0; 12];
+    loop {
+        //check if header length is available
+        if port.bytes_to_read().unwrap() > 13 {
+            //if so read the header and check it matches
+            let _ = port.read_exact(&mut buf);
+            if buf == header {
+                //If it matches read message and decode protobuf
+                let mut len: [u8; 1] = [0];
+                let _ = port.read_exact(&mut len);
+                let mut data = vec![0; len[0] as usize];
+                let _ = port.read_exact(&mut data);
+
+                let status = status::Status::decode(Bytes::from(data));
+                match status {
+                    Ok(val) => {
+                        let _ = tui_log_tx.send(val.update);
+                    }
+                    Err(_e) => {
+                        let _ = tui_log_tx.send(String::from("Decode Failed"));
+                    }
+                }
+            }
+        }
+        thread::sleep(loop_delay);
+    }
 }

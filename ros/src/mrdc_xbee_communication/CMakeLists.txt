@@ -26,7 +26,8 @@ set(PROTOBUF_INCLUDE_DIRS ${PROTOBUF_INCLUDE_DIRS} PARENT_SCOPE)
 set(PROTOBUF_LIBRARIES ${PROTOBUF_LIBRARIES} PARENT_SCOPE)
 set(PROTO_SRC ${PROTO_SRC} PARENT_SCOPE)
 set(PROTO_HEADER ${PROTO_HEADER} PARENT_SCOPE)
-PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS proto/state.proto)
+PROTOBUF_GENERATE_CPP(PROTO_SRCS1 PROTO_HDRS1 proto/state.proto)
+PROTOBUF_GENERATE_CPP(PROTO_SRCS2 PROTO_HDRS2 proto/status.proto)
 
 ## the nodes
 include_directories(
@@ -36,9 +37,9 @@ include_directories(
   include
 )
 
-add_executable(xbee_receive src/xbee_receive.cpp ${PROTO_SRCS} ${PROTO_HDRS})
-target_link_libraries(xbee_receive ${catkin_LIBRARIES})
+add_executable(xbee_communication src/xbee_communication.cpp ${PROTO_SRCS1} ${PROTO_HDRS1} ${PROTO_SRCS2} ${PROTO_HDRS2})
+target_link_libraries(xbee_communication ${catkin_LIBRARIES})
 #add the protocol buffer
-target_link_libraries(xbee_receive protobuf)
+target_link_libraries(xbee_communication protobuf)
 
-add_dependencies(xbee_receive mrdc_xbee_communication_generate_messages_cpp ${${PROJECT_NAME}_EXPORTED_TARGETS})
+add_dependencies(xbee_communication mrdc_xbee_communication_generate_messages_cpp ${${PROJECT_NAME}_EXPORTED_TARGETS})

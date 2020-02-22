@@ -1,0 +1,7 @@
+syntax = "proto3";
+//Should be the same as in laptop
+package status;
+
+message Status{
+    string update = 1 ;
+}

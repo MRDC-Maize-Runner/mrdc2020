@@ -97,7 +97,7 @@ pub fn controller_loop(
             let mut buttons_pressed: Vec<u32> = Vec::with_capacity(buttons.len());
             for (n, b) in buttons.clone() {
                 if state.is_pressed(b) {
-                    buttons_pressed.push(n+0);
+                    buttons_pressed.push(n + 0);
                 }
             }
             current_state.buttons = buttons_pressed;
