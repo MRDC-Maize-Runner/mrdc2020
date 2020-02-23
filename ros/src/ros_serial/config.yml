@@ -1,0 +1,4 @@
+topics:
+  test_motor: #creates a motor on the topic mrdc/test_motor that maps to pin 0 on the arduino
+    type: motor
+    pin_id: 0

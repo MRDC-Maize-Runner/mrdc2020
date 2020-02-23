@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ros_serial)
+set(CMAKE_CXX_STANDARD 17)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -132,7 +133,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
- add_executable(${PROJECT_NAME}_node src/main.cpp)
+ add_executable(${PROJECT_NAME}_node src/main.cpp src/ConfigParser.h src/ConfigParser.cpp src/MotorTopic.h src/MotorTopic.cpp src/Topic.h)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -147,8 +148,9 @@ include_directories(
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
-   yaml-cpp
 )
+
+target_link_libraries(${PROJECT_NAME}_node /usr/local/lib/libyaml-cpp.a)
 
 #############
 ## Install ##
