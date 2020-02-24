@@ -1,4 +1,5 @@
 #include <string>
+#include <stdio.h>
 using namespace std;
 
 #include <thread>
@@ -33,15 +34,13 @@ void status_call_back(const std_msgs::String::ConstPtr& msg){
         binary.insert(0, size_str);
         binary.insert(0,"Transmission");
         ser.write(binary);
-        ROS_INFO(std::format("Sent Message:  {}",msg));
+        ROS_INFO("Sent Message: %s", msg);
     }catch (serial::IOException& e){
         ROS_WARN("Cant send status to controller");
     }
 }
 
 int main(int argc, char **argv){
-    cout << "Hello";
-    ROS_INFO("Send Message Test 57");
     //initialize ROS
     ros::init(argc, argv, "xbee_receive");
     ros::NodeHandle n;

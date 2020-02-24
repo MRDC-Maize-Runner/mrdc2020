@@ -41,8 +41,8 @@ pub fn tui_setup(rx_controller: Receiver<state::State>, rx_log: Receiver<String>
         }
         //formate that data for display (graph, table)
         data = [(
-            controller_received.forward as f64,
             controller_received.turn as f64,
+            controller_received.forward as f64,
         )];
 
         let mut buttons_str = String::from("Buttons: \n");

@@ -32,8 +32,8 @@ fn main() {
     let _controller_thread = thread::spawn(move || {
         controller::controller_loop(
             controller_thread_logger,
-            Axis::LeftStickX,
             Axis::LeftStickY,
+            Axis::LeftStickX,
             controller_tx,
         );
     });
