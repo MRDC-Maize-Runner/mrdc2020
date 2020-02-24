@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package state;
+
+message State{
+	float forward = 1;
+	float turn =2;
+	repeated uint32 buttons = 4;
+}

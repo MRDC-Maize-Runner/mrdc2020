@@ -1,0 +1,22 @@
+[package]
+name = "control_computer"
+version = "0.1.0"
+authors = ["Abraham Zukor <abezukor@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[build-dependencies]
+prost-build = { version = "0.6" }
+
+
+
+[dependencies]
+gilrs = "0.7.4"
+
+serialport = "3.3.0"
+bytes = "0.5.4"
+prost = "0.6"
+
+crossterm = "0.16.0"
+tui = { version = "0.8", default-features = false, features = ['crossterm'] }
+structopt = { version = "0.3", default-features = false }
