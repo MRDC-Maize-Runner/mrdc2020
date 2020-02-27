@@ -76,6 +76,7 @@ pub fn controller_loop(
             }
         }
     }
+    let mut last_fwd = 0.0; let mut last_trn = 0.0;
     loop {
         /* Get the latest data from the gamepad. This is the only way i could figure out how to do this.
         It basically just goes through all the controller events until nothing more in the buffer.Receiver
@@ -90,8 +91,16 @@ pub fn controller_loop(
             //make a state of the controller
             let mut current_state = state::State::default();
 
-            current_state.forward = state.axis_data(fwdaxis.unwrap()).unwrap().value();
-            current_state.turn = state.axis_data(trnaxis.unwrap()).unwrap().value();
+            match state.axis_data(fwdaxis.unwrap()){
+                Some(a_data) => current_state.forward = a_data.value(),
+                None    =>  current_state.forward = last_fwd,
+            }
+            last_fwd = current_state.forward;
+            match state.axis_data(trnaxis.unwrap()){
+                Some(a_data) => current_state.turn = a_data.value(),
+                None    =>  current_state.turn = last_fwd,
+            }
+            last_trn = current_state.turn;
 
             //get buttons data
             let mut buttons_pressed: Vec<u32> = Vec::with_capacity(buttons.len());
