@@ -1,6 +1,9 @@
 use gilrs::Axis;
-use std::sync::mpsc::{channel, sync_channel};
-use std::sync::mpsc::{Receiver, Sender, SyncSender};
+use std::sync::{
+    mpsc::{channel, sync_channel, Receiver, Sender, SyncSender},
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 use std::{env, thread, time};
 
 use crate::controller::state;
@@ -14,13 +17,17 @@ fn main() {
     //set loop timing for the main thread
     let loop_delay = time::Duration::from_millis(10);
 
+    //set up threads running
+    let threads_run = Arc::new(AtomicBool::new(true));
+
     //set up tui
     let (tui_controller_tx, tui_controller_rx): (
         Sender<controller::state::State>,
         Receiver<controller::state::State>,
     ) = channel();
     let (tui_log_tx, tui_log_rx): (Sender<String>, Receiver<String>) = channel();
-    let _tui_receive_thread = thread::spawn(move || tui::tui_setup(tui_controller_rx, tui_log_rx));
+    let tui_thread_run = threads_run.clone();
+    let _tui_receive_thread = thread::spawn(move || tui::tui_setup(tui_thread_run, tui_controller_rx, tui_log_rx));
     let _ = tui_log_tx.send(String::from("Log Starting"));
 
     //set up controller
@@ -29,8 +36,10 @@ fn main() {
         Receiver<controller::state::State>,
     ) = sync_channel(0);
     let controller_thread_logger = tui_log_tx.clone();
+    let controller_thread_run = threads_run.clone();
     let _controller_thread = thread::spawn(move || {
         controller::controller_loop(
+            controller_thread_run,
             controller_thread_logger,
             Axis::LeftStickY,
             Axis::LeftStickX,
@@ -46,24 +55,29 @@ fn main() {
     ) = sync_channel(0);
     let (serial_receive_tx, _serial_receive_rx): (Sender<Vec<u8>>, Receiver<Vec<u8>>) = channel();
     let serial_transmit_thread_logger = tui_log_tx.clone();
+    let serial_transmit_thread_run = threads_run.clone();
     let _serial_transmit_thread = thread::spawn(move || {
         serial::serial_send_data(
+            serial_transmit_thread_run,
             serial_transmit_thread_logger,
             serial_transmit_port,
             serial_transmit_rx,
         )
     });
     let serial_receive_thread_logger = tui_log_tx.clone();
+    let serial_receive_thread_run = threads_run.clone();
     let _serial_receive_thread = thread::spawn(move || {
         serial::serial_get_data(
+            serial_receive_thread_run,
             serial_receive_thread_logger,
             serial_receive_port,
             serial_receive_tx,
         )
     });
 
+    let mut run_main_loop = true;
     //main loop
-    loop {
+    while run_main_loop {
         //get data from the controller channel
         let controller_received = controller_rx.recv().expect("Not Crashing");
         let tui_send_controller = controller_received.clone();
@@ -76,7 +90,7 @@ fn main() {
         }
         //set program speed
         thread::sleep(loop_delay);
-    }
 
-    //controller_thread.join().unwrap(); //this wont run
+        run_main_loop = threads_run.load(Ordering::Relaxed);
+    }
 }

@@ -1,7 +1,11 @@
 use gilrs::ev::{state::GamepadState, Button, Code};
 use gilrs::{Axis, Event, Gilrs};
 
-use std::sync::mpsc::{Sender, SyncSender};
+use std::sync::{
+    mpsc::{Sender, SyncSender},
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 
 //declare the ros object for a controller state
 pub mod state {
@@ -10,6 +14,7 @@ pub mod state {
 
 //Function to run a game controller
 pub fn controller_loop(
+    threads_run: Arc<AtomicBool>,
     tui_log_tx: Sender<String>,
     forward: Axis,
     turn: Axis,
@@ -77,7 +82,7 @@ pub fn controller_loop(
         }
     }
     let mut last_fwd = 0.0; let mut last_trn = 0.0;
-    loop {
+    while threads_run.load(Ordering::Relaxed) {
         /* Get the latest data from the gamepad. This is the only way i could figure out how to do this.
         It basically just goes through all the controller events until nothing more in the buffer.Receiver
         This is what we want because we want the current state of the joystick not a past state
@@ -98,7 +103,7 @@ pub fn controller_loop(
             last_fwd = current_state.forward;
             match state.axis_data(trnaxis.unwrap()){
                 Some(a_data) => current_state.turn = a_data.value(),
-                None    =>  current_state.turn = last_fwd,
+                None    =>  current_state.turn = last_trn,
             }
             last_trn = current_state.turn;
 

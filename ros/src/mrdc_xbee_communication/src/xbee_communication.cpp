@@ -52,10 +52,12 @@ int main(int argc, char **argv){
     state::State currentState;
 
     //serial setup with ros parameters
-    if(!n.hasParam("mrdc_xbee_communication/port") || !n.hasParam("mrdc_xbee_communication/baud_rate")){throw "ROS Parameters not specified";}
-    std::string port; int baud_rate;
+    if(!n.hasParam("mrdc_xbee_communication/port")){throw "ROS Parameters not specified";}
+    std::string port, Analog_Controller_Channel, Status_Update_Channel; int baud_rate;
     n.getParam("mrdc_xbee_communication/port", port);
-    n.getParam("mrdc_xbee_communication/baud_rate", baud_rate);
+    n.param<int>("mrdc_xbee_communication/baud_rate", baud_rate, 115200);
+    n.param<std::string>("Analog_Controller_Channel", Analog_Controller_Channel, "mrdc_xbee_communication/controller_analog");
+    n.param<std::string>("Status_Update_Channel", Status_Update_Channel, "mrdc_xbee_communication/status_updates");
 
     try{
         ser.setPort(port);ser.setBaudrate(baud_rate);
@@ -67,8 +69,8 @@ int main(int argc, char **argv){
     }
 
     //initialize ros channels
-    ros::Publisher controller_analog = n.advertise<mrdc_xbee_communication::Analog_Controller>("mrdc_xbee_communication/controller_analog", 10);
-    ros::Subscriber sub = n.subscribe("mrdc_xbee_communication/status_updates", 1000, status_call_back);
+    ros::Publisher controller_analog = n.advertise<mrdc_xbee_communication::Analog_Controller>(Analog_Controller_Channel, 10);
+    ros::Subscriber sub = n.subscribe(Status_Update_Channel, 1000, status_call_back);
     //read through serial looking for a header, if found read the message and decode it, then send it off
     while (ros::ok()){
         //if the length of the header is available

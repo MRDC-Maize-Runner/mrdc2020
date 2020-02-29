@@ -36,16 +36,23 @@ int main(int argc, char **argv){
 	ros::init(argc, argv, "controls_processing");
 	ros::NodeHandle n;
 
-	ros::Subscriber sub = n.subscribe("mrdc_xbee_communication/controller_analog", 1000, process_analog);
+	//get ros params
+	std::string Analog_Controller_Channel, Left_Front_Channel, Left_Back_Channel, Right_Front_Channel, Right_Back_Channel;
+	n.param<std::string>("Analog_Controller_Channel", Analog_Controller_Channel, "mrdc_xbee_communication/controller_analog");
+	n.param<std::string>("Left_Front_Channel", Left_Front_Channel, "mrdc_controls_processing/Left_Front");
+	n.param<std::string>("Left_Back_Channel", Left_Back_Channel, "mrdc_controls_processing/Left_Back");
+	n.param<std::string>("Right_Front_Channel", Right_Front_Channel, "mrdc_controls_processing/Right_Front");
+	n.param<std::string>("Right_Back_Channel", Right_Back_Channel, "mrdc_controls_processing/Right_Back");
+	n.param<float>("mrdc_controls_processing/deadzone", deadzone, 0.1);
 
-	//get pararms
-	if(!n.hasParam("mrdc_controls_processing/deadzone")){throw "ROS Parameters not specified";}
-	n.getParam("mrdc_controls_processing/deadzone", deadzone);
+	ros::Subscriber sub = n.subscribe(Analog_Controller_Channel, 1000, process_analog);
+
+	
 	//advertise the channels
-	lf_pub = n.advertise<std_msgs::Float32>("mrdc_controls_processing/Left_Front", 10);
-	lb_pub = n.advertise<std_msgs::Float32>("mrdc_controls_processing/Left_Back", 10);
-	rf_pub = n.advertise<std_msgs::Float32>("mrdc_controls_processing/Right_Front", 10);
-	rb_pub = n.advertise<std_msgs::Float32>("mrdc_controls_processing/Right_Back", 10);
+	lf_pub = n.advertise<std_msgs::Float32>(Left_Front_Channel, 10);
+	lb_pub = n.advertise<std_msgs::Float32>(Left_Back_Channel, 10);
+	rf_pub = n.advertise<std_msgs::Float32>(Right_Front_Channel, 10);
+	rb_pub = n.advertise<std_msgs::Float32>(Right_Back_Channel, 10);
 
 	ros::spin();
 

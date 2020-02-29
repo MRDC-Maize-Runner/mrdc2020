@@ -1,7 +1,15 @@
-use std::sync::mpsc::Receiver;
+use std::sync::{
+    mpsc::Receiver,
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 use std::{io::stdout, thread, time::Duration};
 
-use crossterm::terminal::enable_raw_mode;
+use crossterm::{terminal::enable_raw_mode,
+    event::{
+        read, Event, KeyCode, poll
+    },
+};
 
 use tui::layout::{Constraint, Direction, Layout};
 use tui::style::{Color, Style};
@@ -11,7 +19,7 @@ use tui::{backend::CrosstermBackend, Terminal};
 use crate::controller::state;
 
 //setup tui and run thread
-pub fn tui_setup(rx_controller: Receiver<state::State>, rx_log: Receiver<String>) {
+pub fn tui_setup(threads_run: Arc<AtomicBool>, rx_controller: Receiver<state::State>, rx_log: Receiver<String>) {
     //set tui loop update delay
     let loop_delay = Duration::from_millis(100);
 
@@ -31,7 +39,14 @@ pub fn tui_setup(rx_controller: Receiver<state::State>, rx_log: Receiver<String>
     //stuff to help in main loop
     let mut log: Vec<String> = Vec::new();
 
-    loop {
+    while threads_run.load(Ordering::Relaxed) {
+        //poll for quit
+        if poll(Duration::from_secs(0)).unwrap(){
+            if read().unwrap() == Event::Key(KeyCode::Char('q').into()){
+                threads_run.store(false, Ordering::Relaxed);
+            }
+        }
+
         let mut controller_received: state::State = state::State::default();
         //make a place to store controller received stuff
         let controller_received_raw = rx_controller.try_iter();
@@ -60,7 +75,7 @@ pub fn tui_setup(rx_controller: Receiver<state::State>, rx_log: Receiver<String>
             .draw(|mut f| {
                 //get size and drain log to fit
                 let size = f.size();
-                let height: u16 = (size.bottom() - size.top() - 4) / 2;
+                let height: u16 = (size.bottom() - size.top() - 4);
                 if log.len() > height as usize {
                     log.drain(0..(log.len() - (height as usize)));
                 }

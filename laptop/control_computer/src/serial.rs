@@ -1,5 +1,9 @@
 use std::io::Write;
-use std::sync::mpsc::{Receiver, Sender};
+use std::sync::{
+    mpsc::{Receiver, Sender},
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 use std::time::Duration;
 use std::{thread, time};
 
@@ -40,11 +44,12 @@ pub fn port_setup(
 
 //thread to send data over serial port
 pub fn serial_send_data(
+    threads_run: Arc<AtomicBool>,
     _tui_log_tx: Sender<String>,
     mut port: Box<dyn serialport::SerialPort>,
     rx: Receiver<state::State>,
 ) {
-    loop {
+    while threads_run.load(Ordering::Relaxed) {
         //receive a controller state, encode it, add a header and send it over serial
         let message: state::State = rx.recv().unwrap();
         let mut buf = Vec::new();
@@ -74,6 +79,7 @@ pub fn serial_send_data(
 
 //get data from the serial port
 pub fn serial_get_data(
+    threads_run: Arc<AtomicBool>,
     tui_log_tx: Sender<String>,
     mut port: Box<dyn serialport::SerialPort>,
     _tx: Sender<Vec<u8>>,
@@ -82,7 +88,7 @@ pub fn serial_get_data(
     let loop_delay = time::Duration::from_millis(10);
 
     let mut buf: [u8; 12] = [0; 12];
-    loop {
+    while threads_run.load(Ordering::Relaxed) {
         //check if header length is available
         if port.bytes_to_read().unwrap() > 13 {
             //if so read the header and check it matches

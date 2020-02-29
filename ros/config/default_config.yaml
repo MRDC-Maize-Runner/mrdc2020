@@ -1,0 +1,14 @@
+#Channel Names
+Analog_Controller_Channel: 'mrdc_xbee_communication/controller_analog'
+Status_Update_Channel: "mrdc_xbee_communication/status_updates"
+Left_Front_Channel:  "mrdc_controls_processing/Left_Front"
+Left_Back_Channel: "mrdc_controls_processing/Left_Back"
+Right_Front_Channel: "mrdc_controls_processing/Right_Front"
+Right_Back_Channel: "mrdc_controls_processing/Right_Back"
+
+#node config
+#Xbee Communication
+mrdc_xbee_communication/baud_rate: 115200
+
+#Controls Processing
+mrdc_controls_processing/deadzone: 0.1
