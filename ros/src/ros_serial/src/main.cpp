@@ -19,11 +19,11 @@ int main(int argc, char *argv[]){
     ros::init(argc, argv, "mrdc_ros_serial");
     ros::NodeHandle nodeHandle;
 
-    //make subscriptions, and leak memory like crazy
-    std::vector<std::unique_ptr<Topic>> topics;
+    SerialInterface serialInterface(config.m_arduinoDevFile);
+    std::vector<std::unique_ptr<Topic>> topics; //store topics to prevent them from getting RAII'd (removing all references to them without freeing them is also evil)
 
     for(auto &configuredMotor : config.m_motors){
-        topics.push_back(std::make_unique<MotorTopic>(nodeHandle, configuredMotor));
+        topics.push_back(std::make_unique<MotorTopic>(nodeHandle, &serialInterface, configuredMotor));
     }
 
     ros::spin();

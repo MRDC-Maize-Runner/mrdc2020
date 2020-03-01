@@ -10,6 +10,12 @@ Config mrdc_serial_node::parseConfig(const std::string &file){
     auto rootNode = YAML::LoadFile(file);
     Config config;
 
+    if(auto arduinoPath = rootNode["arduino_file"]){
+        config.m_arduinoDevFile = arduinoPath.as<std::string>();
+    }else{
+        throw std::runtime_error("The arduino_file node must exist and be a string.");
+    }
+
     if(rootNode["topics"]){
         auto topicsNode = rootNode["topics"];
         if(!topicsNode.IsMap()){
@@ -22,7 +28,7 @@ Config mrdc_serial_node::parseConfig(const std::string &file){
             if(type == "motor"){
                 config.m_motors.emplace_back(
                         name,
-                        it.second["pin_id"].as<std::uint8_t>()
+                        it.second["pin_id"].as<std::uint32_t>()
                 );
                 std::cout << "Found motor with name: " << name << std::endl;
             }else{

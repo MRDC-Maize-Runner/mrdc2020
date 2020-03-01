@@ -10,7 +10,7 @@ namespace mrdc_serial_node{
 
     class MotorTopic : public Topic{
     public:
-        explicit MotorTopic(ros::NodeHandle &nodeHandle, const ConfiguredMotor &motorConfiguration);
+        explicit MotorTopic(ros::NodeHandle &nodeHandle, SerialInterface *serialInterface, const ConfiguredMotor &motorConfiguration);
         void operator()(const std_msgs::Float32::ConstPtr &motorPower);
 
     private:

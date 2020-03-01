@@ -15,6 +15,7 @@ namespace mrdc_serial_node{
     };
 
     struct Config{
+        std::string m_arduinoDevFile;
         std::vector<ConfiguredMotor> m_motors;
     };
 
