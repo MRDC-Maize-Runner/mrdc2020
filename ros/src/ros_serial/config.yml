@@ -1,5 +1,5 @@
-arduino_file: ./serial_dump
+arduino_file: ./serial_dump #edit this to point to the serial port's /dev file (e.g. /dev/ttyACM0)
 topics:
-  test_motor: #creates a motor on the topic mrdc/test_motor that maps to pin 0 on the arduino
+  test_motor: #creates a motor on the topic /test_motor that maps to pin 0 on the arduino
     type: motor
     pin_id: 2
