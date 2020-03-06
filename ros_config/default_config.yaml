@@ -12,3 +12,4 @@ mrdc_xbee_communication/baud_rate: 115200
 
 #Controls Processing
 mrdc_controls_processing/deadzone: 0.1
+mrdc_xbee_communication/port: "/dev/ttyUSB0"
