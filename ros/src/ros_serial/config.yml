@@ -3,9 +3,12 @@ topics:
   "mrdc_controls_processing/Left_Front": #creates a motor on the topic mrdc/test_motor that maps to pin 0 on the arduino
     type: motor
     pin_id: 3
-  "mrdc_controls_processing/Left_Front": #creates a motor on the topic mrdc/test_motor that maps to pin 0 on the arduino
+  "mrdc_controls_processing/Right_Front": #creates a motor on the topic mrdc/test_motor that maps to pin 0 on the arduino
     type: motor
     pin_id: 5
-  "mrdc_controls_processing/Left_Front": #creates a motor on the topic mrdc/test_motor that maps to pin 0 on the arduino
+  "mrdc_controls_processing/Left_Back": #creates a motor on the topic mrdc/test_motor that maps to pin 0 on the arduino
     type: motor
     pin_id: 6
+  "mrdc_controls_processing/Right_Back":
+    type: motor
+    pin_id: 9
