@@ -9,7 +9,21 @@ Right_Back_Channel: "mrdc_controls_processing/Right_Back"
 #node config
 #Xbee Communication
 mrdc_xbee_communication/baud_rate: 115200
+mrdc_xbee_communication/port: "/dev/ttyUSB0"
 
 #Controls Processing
 mrdc_controls_processing/deadzone: 0.1
-mrdc_xbee_communication/port: "/dev/ttyUSB0"
+mrdc_controls_processing/left_pwm_channel: 0
+mrdc_controls_processing/right_pwm_channel: 1
+mrdc_controls_processing/command_channel: "command"
+
+
+#PCA9865 Node Config
+device: "/dev/i2c-1"
+address: 0x40
+frequency: 500
+timeout: [500,500,500,500,500,500,500,500,500,500,500,500,500,500,500,500]
+timeout_value: 5200
+pwm_min: 2800
+pwm_max: 7600
+
