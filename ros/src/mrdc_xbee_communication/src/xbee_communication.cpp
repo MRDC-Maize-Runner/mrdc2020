@@ -45,7 +45,7 @@ int main(int argc, char **argv){
     ros::init(argc, argv, "xbee_receive");
     ros::NodeHandle n;
 
-    ros::Rate loop_rate(100);
+    ros::Rate loop_rate(1000);
 
     //Initialize Protocol
     GOOGLE_PROTOBUF_VERIFY_VERSION;
