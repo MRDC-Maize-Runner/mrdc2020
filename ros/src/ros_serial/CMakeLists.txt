@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(catkin REQUIRED COMPONENTS
   std_msgs
   roscpp
+  serial
 )
 
 ## System dependencies are found with CMake's conventions

@@ -15,7 +15,7 @@ MotorTopic::MotorTopic(ros::NodeHandle &nodeHandle, SerialInterface *serialInter
 }
 
 void MotorTopic::operator()(const std_msgs::Float32::ConstPtr &motorPower) {
-    constexpr int MAX = 250, MIN = 110;
+    constexpr int MAX = 255, MIN = 0;
     float f = motorPower->data;
     unsigned char scaled = static_cast<unsigned>(std::round((f*0.5f+0.5f)*(MAX-MIN)+MIN));
 

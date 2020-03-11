@@ -12,3 +12,6 @@ topics:
   "mrdc_controls_processing/Right_Back":
     type: motor
     pin_id: 9
+  "test":
+    type: motor
+    pin_id: 14
